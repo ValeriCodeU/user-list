@@ -9,7 +9,9 @@ export default function UserListTable() {
     const [showCreate, setShowCreate] = useState(false);
 
     useEffect(() => {
-        userService.getAll().then(result => setUsers(result));
+        userService.getAll()
+        .then(result => setUsers(result))
+        .catch(err => console.log(err));
     }, []);
 
     const createUserClickHandler = () => {
@@ -20,6 +22,20 @@ export default function UserListTable() {
 
     const hideCreateModal = () => {
         setShowCreate(false);
+    }
+
+    const userCreateHandler = async (e) => {
+        e.preventDefault();
+        setShowCreate(false);
+
+
+        const data = Object.fromEntries(new FormData(e.currentTarget));       
+
+        const newUser = await userService.create(data);
+
+        setUsers(state => [...state, newUser]);
+
+        console.log(newUser);
     }
 
     return (
@@ -104,7 +120,10 @@ export default function UserListTable() {
 
             <button className="btn-add btn" onClick={createUserClickHandler}>Add new user</button>
 
-           {showCreate &&  <CreateUserModal hideModal={hideCreateModal}/>}
+            {showCreate && (<CreateUserModal
+                hideModal={hideCreateModal}
+                onUserCreate={userCreateHandler}
+            />)}
 
         </div>
 
