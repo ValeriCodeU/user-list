@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import * as userService from "../services-api/userApi";
 import CreateUserModal from "./CreateUserModal";
 import ShowInfoModal from "./ShowInfoModal";
+import UserDeleteModal from "./UserDeleteModal";
 
 export default function UserListTable() {
 
     const [users, setUsers] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
     const [showInfo, setShowInfo] = useState(false);
+    const [showDelete, setShowDelete] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState(null);
 
     useEffect(() => {
@@ -49,13 +51,36 @@ export default function UserListTable() {
         setShowCreate(false);
     }
 
-    const infoClickHandler = async (userId) => {
+    const infoClickHandler = (userId) => {
 
         //Save user id to state in user list table
         setSelectedUserId(userId);
 
         //Close user info modal
         setShowInfo(true);
+    }
+
+    const deleteUserClickHandler = (userId) => {
+        setShowDelete(true);
+        setSelectedUserId(userId);
+        console.log(userId);
+    }
+
+    const deleteUserHandler = async () => {        
+
+        //Remove user from server and return deleted user
+        try {
+            await userService.remove(selectedUserId);            
+
+        } catch (error) {
+            console.log(error);
+        }
+
+       //Remove user from state
+        setUsers(state => state.filter(u => u._id !== selectedUserId));
+
+        //Close user delete modal
+        setShowDelete(false);
     }
 
     return (
@@ -136,6 +161,7 @@ export default function UserListTable() {
                             createdAt={user.createdAt}
                             imageUrl={user.imageUrl}
                             onInfoClick={infoClickHandler}
+                            onDeleteClick={deleteUserClickHandler}
                         />
                     ))}
 
@@ -144,6 +170,9 @@ export default function UserListTable() {
             </table>
 
             {showInfo && <ShowInfoModal hideModal={hideInfoModal} userId={selectedUserId} />}
+
+            {showDelete && <UserDeleteModal hideModal={() => setShowDelete(false)} onDelete={deleteUserHandler} />}
+
 
             <button className="btn-add btn" onClick={createUserClickHandler}>Add new user</button>
 

@@ -14,7 +14,7 @@ export default function ShowInfoModal(
         userService.getOne(userId)
         .then(result => setUserInfo(result))
         .catch(err => console.log(err))
-    }, [userInfo]);    
+    }, [userId]);    
 
     return (
         <div className="overlay">
