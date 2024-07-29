@@ -2,21 +2,22 @@ import UserListItem from "./UserListItem";
 import { useEffect, useState } from "react";
 import * as userService from "../services-api/userApi";
 import CreateUserModal from "./CreateUserModal";
+import ShowInfoModal from "./ShowInfoModal";
 
 export default function UserListTable() {
 
     const [users, setUsers] = useState([]);
     const [showCreate, setShowCreate] = useState(false);
+    const [showInfo, setShowInfo] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState(null);
 
     useEffect(() => {
         userService.getAll()
-        .then(result => setUsers(result))
-        .catch(err => console.log(err));
+            .then(result => setUsers(result))
+            .catch(err => console.log(err));
     }, []);
 
     const createUserClickHandler = () => {
-        console.log("create user")
-
         setShowCreate(true);
     }
 
@@ -24,23 +25,47 @@ export default function UserListTable() {
         setShowCreate(false);
     }
 
+    const hideInfoModal = () => {
+        setShowInfo(false);
+    }
+
     const userCreateHandler = async (e) => {
+        //Stop page from refreshing
         e.preventDefault();
-        setShowCreate(false);
 
+        //Get form data
+        const data = Object.fromEntries(new FormData(e.currentTarget));
 
-        const data = Object.fromEntries(new FormData(e.currentTarget));       
-
+        //Create new user at the server!
         const newUser = await userService.create(data);
 
+        //Add newly created user to the local state
         setUsers(state => [...state, newUser]);
 
-        console.log(newUser);
+        //For test only
+        //console.log(newUser);
+
+        //Close create user modal;
+        setShowCreate(false);
+    }
+
+    const infoClickHandler = async (userId) => {
+
+        //Save user id to state in user list table
+        setSelectedUserId(userId);
+
+        //Close user info modal
+        setShowInfo(true);
     }
 
     return (
 
         <div className="table-wrapper">
+
+            {showCreate && (<CreateUserModal
+                hideModal={hideCreateModal}
+                onUserCreate={userCreateHandler}
+            />)}
 
             <table className="table">
                 <thead>
@@ -99,18 +124,18 @@ export default function UserListTable() {
                 </thead>
                 <tbody>
 
-
-
                     {users.map(user => (
 
                         <UserListItem
                             key={user._id}
+                            userId={user._id}
                             firstName={user.firstName}
                             lastName={user.lastName}
                             email={user.email}
                             phoneNumber={user.phoneNumber}
                             createdAt={user.createdAt}
                             imageUrl={user.imageUrl}
+                            onInfoClick={infoClickHandler}
                         />
                     ))}
 
@@ -118,14 +143,10 @@ export default function UserListTable() {
                 </tbody>
             </table>
 
+            {showInfo && <ShowInfoModal hideModal={hideInfoModal} userId={selectedUserId} />}
+
             <button className="btn-add btn" onClick={createUserClickHandler}>Add new user</button>
 
-            {showCreate && (<CreateUserModal
-                hideModal={hideCreateModal}
-                onUserCreate={userCreateHandler}
-            />)}
-
         </div>
-
     );
 }
